@@ -1,0 +1,38 @@
+name: Feature slice
+description: Plan a user-visible vertical feature.
+title: "[Feature] "
+labels: [feature]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User outcome
+      description: What can a user accomplish after this is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - Given ..., when ..., then ...
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Primary module
+      options:
+        - identity/platform
+        - contacts
+        - crm
+        - catalog/sales
+        - projects
+        - reporting/shared-ui
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and contract changes
+      description: Note model, API, permission, migration, or cross-module impact.
