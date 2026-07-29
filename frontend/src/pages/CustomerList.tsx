@@ -13,6 +13,7 @@ interface Customer {
   updated_at: string;
 }
 
+import { Link } from 'react-router-dom';
 import { CustomerDialog } from '../components/CustomerDialog';
 
 export function CustomerList() {
@@ -114,7 +115,11 @@ export function CustomerList() {
             <tbody>
               {data.map((customer) => (
                 <tr key={customer.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '0.5rem' }}>{customer.name}</td>
+                  <td style={{ padding: '0.5rem' }}>
+                    <Link to={`/contacts/${customer.id}`} style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>
+                      {customer.name}
+                    </Link>
+                  </td>
                   <td style={{ padding: '0.5rem' }}>{customer.kind === 'company' ? 'Công ty' : 'Cá nhân'}</td>
                   <td style={{ padding: '0.5rem' }}>{customer.email}</td>
                   <td style={{ padding: '0.5rem' }}>{customer.phone}</td>

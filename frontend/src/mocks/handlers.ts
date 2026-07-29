@@ -25,6 +25,12 @@ let customersData = [
   },
 ];
 
+let contactsData: Record<string, any[]> = {
+  '1': [
+    { id: 'c1', name: 'Alice', position: 'CEO', email: 'alice@acme.com', phone: '111-222' }
+  ]
+};
+
 export const handlers = [
   http.get('/api/customers/', async ({ request }) => {
     await delay(1000); // Tăng delay để hiển thị skeleton/spinner rõ hơn
@@ -79,5 +85,46 @@ export const handlers = [
     customersData = [newCustomer, ...customersData];
 
     return HttpResponse.json(newCustomer, { status: 201 });
+  }),
+
+  http.get('/api/customers/:id', async ({ params }) => {
+    await delay(500);
+    const { id } = params;
+    const customer = customersData.find(c => c.id === id);
+    if (!customer) {
+      return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
+    }
+    return HttpResponse.json(customer);
+  }),
+
+  http.get('/api/customers/:id/contacts/', async ({ params }) => {
+    await delay(500);
+    const { id } = params;
+    return HttpResponse.json(contactsData[id as string] || []);
+  }),
+
+  http.post('/api/customers/:id/contacts/', async ({ params, request }) => {
+    await delay(500);
+    const { id } = params;
+    const body = await request.json() as any;
+    
+    if (!body.name) {
+      return HttpResponse.json({ detail: 'Name is required' }, { status: 400 });
+    }
+
+    const newContact = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: body.name,
+      position: body.position || '',
+      email: body.email || '',
+      phone: body.phone || '',
+    };
+
+    if (!contactsData[id as string]) {
+      contactsData[id as string] = [];
+    }
+    contactsData[id as string].push(newContact);
+
+    return HttpResponse.json(newContact, { status: 201 });
   }),
 ];
