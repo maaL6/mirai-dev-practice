@@ -24,3 +24,7 @@ frontend/coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+#skills/
+# overviewW1.md
+#tv3_tasks.md
+.scratch/

@@ -1,7 +1,8 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 
 export const handlers = [
-  http.get('/api/customers/', () => {
+  http.get('/api/customers/', async () => {
+    await delay(1000); // Tăng delay để hiển thị skeleton/spinner rõ hơn
     return HttpResponse.json([
       {
         id: '1',
