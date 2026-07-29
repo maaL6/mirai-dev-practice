@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 interface Customer {
@@ -13,10 +14,19 @@ interface Customer {
 }
 
 export function CustomerList() {
+  const [search, setSearch] = useState('');
+  const [kind, setKind] = useState('');
+  const [active, setActive] = useState('');
+
   const { data, isLoading, isError, error } = useQuery<Customer[]>({
-    queryKey: ['customers'],
+    queryKey: ['customers', search, kind, active],
     queryFn: async () => {
-      const res = await fetch('/api/customers/');
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (kind) params.append('kind', kind);
+      if (active) params.append('active', active);
+
+      const res = await fetch(`/api/customers/?${params.toString()}`);
       if (!res.ok) {
         throw new Error(`HTTP Error: ${res.status}`);
       }
@@ -32,7 +42,36 @@ export function CustomerList() {
           <h1>Customer List</h1>
         </div>
       </header>
+
       <section className="section">
+        <div className="filter-bar" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            placeholder="Tìm kiếm khách hàng, email..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '4px', flex: 1, minWidth: '200px' }}
+          />
+          <select 
+            value={kind} 
+            onChange={(e) => setKind(e.target.value)}
+            style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+          >
+            <option value="">Tất cả phân loại</option>
+            <option value="company">Công ty</option>
+            <option value="individual">Cá nhân</option>
+          </select>
+          <select 
+            value={active} 
+            onChange={(e) => setActive(e.target.value)}
+            style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+
         {isLoading && (
           <div className="loading-state" style={{ padding: '2rem', textAlign: 'center' }}>
             <div className="spinner" style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '3px solid var(--border-color)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
@@ -51,8 +90,8 @@ export function CustomerList() {
 
         {!isLoading && !isError && data && data.length === 0 && (
           <div className="empty-state" style={{ padding: '4rem 2rem', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: '8px' }}>
-            <h3 style={{ marginBottom: '0.5rem' }}>Chưa có khách hàng nào</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Hãy tạo khách hàng đầu tiên để bắt đầu quản lý.</p>
+            <h3 style={{ marginBottom: '0.5rem' }}>Không tìm thấy kết quả</h3>
+            <p style={{ color: 'var(--text-muted)' }}>Không có khách hàng nào khớp với bộ lọc và tìm kiếm của bạn.</p>
           </div>
         )}
 
