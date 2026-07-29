@@ -1,13 +1,5 @@
 # Mirai Mini ERP
 
-Mirai Mini ERP is a six-week learning project inspired by Odoo's modular business architecture.
-The initial release follows one focused workflow:
-
-`Contact → Opportunity → Quotation → Project → Task → Dashboard`
-
-Week 1 establishes a working development platform, module boundaries, shared product language,
-quality gates, and delivery conventions. Feature implementation starts in week 2.
-
 ## What is ready
 
 - Django REST backend with a custom user foundation and seven bounded modules.
