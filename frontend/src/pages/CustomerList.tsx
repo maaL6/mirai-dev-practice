@@ -13,6 +13,8 @@ interface Customer {
   updated_at: string;
 }
 
+import { CustomerDialog } from '../components/CustomerDialog';
+
 export function CustomerList() {
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('');
@@ -37,9 +39,12 @@ export function CustomerList() {
   return (
     <main className="main-content">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">Customers</p>
-          <h1>Customer List</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div>
+            <p className="eyebrow">Customers</p>
+            <h1>Customer List</h1>
+          </div>
+          <CustomerDialog />
         </div>
       </header>
 
