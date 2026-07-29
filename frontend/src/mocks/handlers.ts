@@ -127,4 +127,41 @@ export const handlers = [
 
     return HttpResponse.json(newContact, { status: 201 });
   }),
+
+  http.patch('/api/customers/:id', async ({ params, request }) => {
+    await delay(500);
+    const { id } = params;
+    
+    if (id === '403') {
+      return HttpResponse.json({ detail: 'Forbidden' }, { status: 403 });
+    }
+
+    const customerIndex = customersData.findIndex(c => c.id === id);
+    if (customerIndex === -1) {
+      return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
+    }
+
+    const body = await request.json() as any;
+    customersData[customerIndex] = { ...customersData[customerIndex], ...body };
+    
+    return HttpResponse.json(customersData[customerIndex]);
+  }),
+
+  http.post('/api/customers/:id/deactivate/', async ({ params }) => {
+    await delay(500);
+    const { id } = params;
+
+    if (id === '403') {
+      return HttpResponse.json({ detail: 'Forbidden' }, { status: 403 });
+    }
+
+    const customerIndex = customersData.findIndex(c => c.id === id);
+    if (customerIndex === -1) {
+      return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
+    }
+
+    customersData[customerIndex].is_active = false;
+    
+    return HttpResponse.json(customersData[customerIndex]);
+  }),
 ];
