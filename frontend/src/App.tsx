@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { StatusBadge } from "./components/StatusBadge";
+import { useAuth } from "./lib/AuthContext";
 import { getHealth } from "./lib/api";
 
 const modules = [
@@ -30,8 +31,16 @@ const foundations = [
   },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  member: "Member",
+};
+
 function App() {
+  const { user, logout } = useAuth();
   const [health, setHealth] = useState<"checking" | "ready" | "offline">("checking");
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -44,6 +53,21 @@ function App() {
       });
     return () => controller.abort();
   }, []);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } catch {
+      // Redirect will happen via AuthContext → ProtectedRoute.
+    }
+  }
+
+  // Build avatar initials from user name.
+  const initials = user
+    ? (user.first_name?.[0] ?? "").toUpperCase() +
+      (user.last_name?.[0] ?? "").toUpperCase() || user.username[0].toUpperCase()
+    : "?";
 
   return (
     <div className="app-shell">
@@ -73,12 +97,21 @@ function App() {
 
         <div className="sidebar__footer">
           <div className="avatar" aria-hidden="true">
-            MT
+            {initials}
           </div>
-          <span>
-            <strong>Mirai Team</strong>
-            <small>6 contributors</small>
+          <span className="sidebar__user-info">
+            <strong>{user ? `${user.first_name} ${user.last_name}`.trim() || user.username : ""}</strong>
+            <small>{user ? ROLE_LABELS[user.role] ?? user.role : ""}</small>
           </span>
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            title="Đăng xuất"
+            aria-label="Đăng xuất"
+          >
+            {loggingOut ? "…" : "↗"}
+          </button>
         </div>
       </aside>
 

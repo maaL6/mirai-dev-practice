@@ -117,3 +117,19 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
+
+# ---------------------------------------------------------------------------
+# Authentication backend — allow login by email
+# ---------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# ---------------------------------------------------------------------------
+# Session & cookie configuration
+# ---------------------------------------------------------------------------
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+CORS_ALLOW_CREDENTIALS = True
+
