@@ -16,10 +16,14 @@ async function enableMocking() {
   });
 }
 
-enableMocking().then(() => {
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
-});
+enableMocking()
+  .catch((err) => {
+    console.error("Lỗi khởi chạy MSW (có thể do trình duyệt chặn Service Worker):", err);
+  })
+  .then(() => {
+    createRoot(document.getElementById("root")!).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+  });

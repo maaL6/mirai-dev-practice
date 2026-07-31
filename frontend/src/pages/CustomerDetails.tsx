@@ -57,12 +57,12 @@ export function CustomerDetails() {
     );
   }
 
-  if (isError && error.message === 'Not Found') {
+  if (isError && error?.message === 'Not Found') {
     return (
       <main className="main-content">
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h2>404 - Khách hàng không tồn tại</h2>
-          <Link to="/contacts" className="button">Quay lại danh sách</Link>
+          <Link to="/contacts" className="button">Trở về danh sách khách hàng</Link>
         </div>
       </main>
     );
@@ -83,6 +83,8 @@ export function CustomerDetails() {
       deactivateMutation.mutate();
     }
   };
+
+  if (!customer) return null;
 
   return (
     <main className="main-content">

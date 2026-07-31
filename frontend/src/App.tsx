@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Dashboard } from './pages/Dashboard';
 import { CustomerList } from './pages/CustomerList';
 import { CustomerDetails } from './pages/CustomerDetails';
+import { CrmList } from './pages/CrmList';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function AppLayout() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/contacts" element={<CustomerList />} />
         <Route path="/contacts/:id" element={<CustomerDetails />} />
+        <Route path="/crm" element={<CrmList />} />
       </Routes>
     </div>
   );
