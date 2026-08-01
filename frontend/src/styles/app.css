@@ -98,6 +98,7 @@
 .sidebar__footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
   margin-top: auto;
   padding: var(--space-4) var(--space-2) 0;
@@ -105,9 +106,71 @@
   font-size: 0.82rem;
 }
 
+.sidebar__user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sidebar__user-info strong {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 9rem;
+}
+
+.sidebar__user-info small {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--color-sidebar-muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 9rem;
+}
+
+.sidebar__role {
+  display: inline-flex !important;
+  margin-top: 0.2rem !important;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.6rem !important;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgb(255 255 255 / 12%);
+  color: #a8c8b4 !important;
+}
+
+.sidebar__logout {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-sidebar-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.sidebar__logout:hover {
+  color: white;
+  background: rgb(255 255 255 / 10%);
+  border-color: rgb(255 255 255 / 25%);
+}
+
 .avatar {
   width: 2.2rem;
   height: 2.2rem;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
   border: 1px solid rgb(255 255 255 / 18%);
@@ -115,6 +178,36 @@
   background: rgb(255 255 255 / 8%);
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+/* ── Placeholder page ── */
+
+.placeholder-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.placeholder-page__icon {
+  font-size: 3rem;
+  color: var(--color-ink-muted);
+  opacity: 0.3;
+  margin-bottom: var(--space-4);
+}
+
+.placeholder-page h1 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+
+.placeholder-page p {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 0.9rem;
 }
 
 .main-content {
