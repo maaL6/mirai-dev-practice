@@ -64,6 +64,7 @@ branching, review, and definition-of-done rules.
 - [Design system](docs/design-system.md)
 - [Test plan](docs/test-plan.md)
 - [Development workflow](docs/development.md)
+- [Week 2 work plan](docs/week-02-work-plan.md)
 
 ## Current scope
 
