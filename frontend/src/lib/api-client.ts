@@ -10,7 +10,7 @@
 import { ApiRequestError, parseApiError } from "./api-error";
 
 const BASE_URL: string =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+  import.meta.env.VITE_API_URL ?? "/api";
 
 /** Callback invoked when a 401 is received – set by AuthProvider. */
 let onUnauthorized: (() => void) | null = null;
@@ -41,7 +41,11 @@ async function request<T>(
   body?: unknown,
   options?: RequestOptions,
 ): Promise<T> {
-  let url = `${BASE_URL}${path}`;
+  let url = path.startsWith("http")
+    ? path
+    : path.startsWith("/api")
+    ? path
+    : `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
   if (options?.params) {
     const qs = new URLSearchParams(options.params).toString();
