@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from apps.customers.models import Contact, Customer
 from apps.identity.models import User
 
 from .models import Opportunity, Stage

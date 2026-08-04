@@ -5,7 +5,6 @@ from rest_framework.response import Response
 
 from apps.customers.models import Customer
 from apps.identity.models import User
-from apps.identity.permissions import IsManagerOrAdmin
 
 from .models import Project, Task
 from .serializers import (
