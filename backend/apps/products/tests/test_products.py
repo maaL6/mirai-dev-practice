@@ -91,6 +91,10 @@ class ProductApiTests(TestCase):
         res_deact = self.client.post(f"/api/products/{self.product1.id}/deactivate/")
         self.assertEqual(res_deact.status_code, status.HTTP_403_FORBIDDEN)
 
+        # Activate should be forbidden (403)
+        res_act = self.client.post(f"/api/products/{self.product1.id}/activate/")
+        self.assertEqual(res_act.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_deactivate_keeps_record(self):
         self.client.force_authenticate(user=self.admin)
         res = self.client.post(f"/api/products/{self.product1.id}/deactivate/")
@@ -99,6 +103,15 @@ class ProductApiTests(TestCase):
         self.assertFalse(self.product1.is_active)
         self.assertEqual(Product.objects.count(), 1)
 
+    def test_activate_product(self):
+        self.product1.is_active = False
+        self.product1.save()
+        self.client.force_authenticate(user=self.admin)
+        res = self.client.post(f"/api/products/{self.product1.id}/activate/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.product1.refresh_from_db()
+        self.assertTrue(self.product1.is_active)
+
     def test_search_product(self):
         self.client.force_authenticate(user=self.member)
         res = self.client.get("/api/products/?search=Implementation")
@@ -106,3 +119,4 @@ class ProductApiTests(TestCase):
         results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["sku"], "SRV-001")
+

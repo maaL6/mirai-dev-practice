@@ -23,6 +23,17 @@ export type ProjectItem = {
   description?: string;
 };
 
+export const PROJECT_STATUS_MAP: Record<
+  string,
+  { label: string; state: "ready" | "checking" | "offline" }
+> = {
+  planning: { label: "Lập kế hoạch", state: "checking" },
+  in_progress: { label: "Đang thực hiện", state: "ready" },
+  completed: { label: "Hoàn thành", state: "ready" },
+  on_hold: { label: "Tạm dừng", state: "offline" },
+  cancelled: { label: "Đã hủy", state: "offline" },
+};
+
 export function ProjectListPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -76,16 +87,11 @@ export function ProjectListPage() {
       key: "status",
       header: "Trạng thái",
       render: (p: ProjectItem) => {
-        const stateMap: Record<string, "ready" | "checking" | "offline"> = {
-          planning: "checking",
-          in_progress: "ready",
-          completed: "ready",
-          on_hold: "offline",
-          cancelled: "offline",
+        const info = PROJECT_STATUS_MAP[p.status] || {
+          label: p.status,
+          state: "checking" as const,
         };
-        return (
-          <StatusBadge state={stateMap[p.status] || "checking"} />
-        );
+        return <StatusBadge state={info.state} label={info.label} />;
       },
     },
     {
@@ -158,11 +164,11 @@ export function ProjectListPage() {
           style={{ width: "auto" }}
         >
           <option value="">Tất cả trạng thái</option>
-          <option value="planning">Planning</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="on_hold">On Hold</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="planning">Lập kế hoạch</option>
+          <option value="in_progress">Đang thực hiện</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="on_hold">Tạm dừng</option>
+          <option value="cancelled">Đã hủy</option>
         </select>
       </FilterBar>
 

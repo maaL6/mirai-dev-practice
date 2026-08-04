@@ -42,6 +42,15 @@ export function ProductListPage() {
     },
   });
 
+  const activateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiClient.post(`/api/products/${id}/activate/`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
   const columns: Column<ProductData>[] = [
     {
       key: "sku",
@@ -71,7 +80,10 @@ export function ProductListPage() {
       key: "is_active",
       header: "Trạng thái",
       render: (p: ProductData) => (
-        <StatusBadge state={p.is_active ? "ready" : "offline"} />
+        <StatusBadge
+          state={p.is_active ? "ready" : "offline"}
+          label={p.is_active ? "Đang kinh doanh" : "Ngừng kinh doanh"}
+        />
       ),
     },
     ...(canManage
@@ -90,12 +102,19 @@ export function ProductListPage() {
                 >
                   Sửa
                 </Button>
-                {p.is_active && (
+                {p.is_active ? (
                   <Button
                     variant="destructive"
                     onClick={() => deactivateMutation.mutate(p.id!)}
                   >
                     Tắt
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    onClick={() => activateMutation.mutate(p.id!)}
+                  >
+                    Bật
                   </Button>
                 )}
               </div>

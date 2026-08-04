@@ -54,3 +54,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.save(update_fields=["is_active", "updated_at"])
         serializer = self.get_serializer(product)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsManagerOrAdmin],
+    )
+    def activate(self, request, pk=None):
+        product = self.get_object()
+        product.is_active = True
+        product.save(update_fields=["is_active", "updated_at"])
+        serializer = self.get_serializer(product)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

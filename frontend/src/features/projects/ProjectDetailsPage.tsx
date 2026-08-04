@@ -8,6 +8,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { SelectInput } from "../../components/SelectInput";
 import { StatusBadge } from "../../components/StatusBadge";
 import { apiClient } from "../../lib/api-client";
+import { PROJECT_STATUS_MAP } from "./ProjectListPage";
 import { TaskFormDialog } from "./TaskFormDialog";
 
 type ProjectDetailsPageProps = {
@@ -183,7 +184,13 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
           <div>
             <small style={{ color: "var(--text-muted)" }}>Trạng thái</small>
             <div>
-              <StatusBadge state={project.status === "completed" ? "ready" : "checking"} />
+              {(() => {
+                const info = PROJECT_STATUS_MAP[project.status] || {
+                  label: project.status,
+                  state: "checking" as const,
+                };
+                return <StatusBadge state={info.state} label={info.label} />;
+              })()}
             </div>
           </div>
           <div>
