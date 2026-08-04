@@ -1,15 +1,5 @@
-/* ──────────────────────────────────────────────
- *  App shell — routing, auth, sidebar
- *
- *  Uses hash-based routing (zero dependencies).
- *  Routes:
- *    #/login   → Login page
- *    #/        → Dashboard (home)
- *    #/users   → User management (admin only)
- *    #/contacts, #/crm, #/sales, #/projects, #/reports → placeholders
- * ────────────────────────────────────────────── */
-
 import { useCallback, useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { RequireRole } from "./auth/RequireRole";
@@ -19,6 +9,12 @@ import { StatusBadge } from "./components/StatusBadge";
 import { LoginPage } from "./features/auth/LoginPage";
 import { UserManagementPage } from "./features/users/UserManagementPage";
 import { getHealth } from "./lib/api";
+
+import { CustomerList } from "./pages/CustomerList";
+import { CustomerDetails } from "./pages/CustomerDetails";
+import { CrmList } from "./pages/CrmList";
+
+const queryClient = new QueryClient();
 
 /* ── Hash router ── */
 
@@ -51,8 +47,8 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Overview", symbol: "⌂", path: "/" },
-  { label: "Contacts", symbol: "◎", path: "/contacts", placeholder: true },
-  { label: "CRM", symbol: "◇", path: "/crm", placeholder: true },
+  { label: "Contacts", symbol: "◎", path: "/contacts" },
+  { label: "CRM", symbol: "◇", path: "/crm" },
   { label: "Sales", symbol: "▤", path: "/sales", placeholder: true },
   { label: "Projects", symbol: "▦", path: "/projects", placeholder: true },
   { label: "Reports", symbol: "↗", path: "/reports", placeholder: true },
@@ -247,6 +243,11 @@ function AppShell() {
 
   // Render page
   const renderPage = () => {
+    if (route.startsWith("/contacts/")) {
+      const id = route.replace("/contacts/", "");
+      return <CustomerDetails id={id} />;
+    }
+
     switch (route) {
       case "/":
         return <DashboardPage />;
@@ -257,9 +258,9 @@ function AppShell() {
           </RequireRole>
         );
       case "/contacts":
-        return <PlaceholderPage name="Contacts" />;
+        return <CustomerList />;
       case "/crm":
-        return <PlaceholderPage name="CRM" />;
+        return <CrmList />;
       case "/sales":
         return <PlaceholderPage name="Sales" />;
       case "/projects":
@@ -333,9 +334,11 @@ function AppShell() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
