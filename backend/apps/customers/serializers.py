@@ -16,10 +16,20 @@ class ContactSerializer(serializers.ModelSerializer):
             "email",
             "phone",
             "is_primary",
+            "is_active",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "customer", "created_at", "updated_at"]
+
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        phone = attrs.get('phone', '')
+        if not email.strip() and not phone.strip():
+            raise serializers.ValidationError(
+                {"non_field_errors": "A contact must have either an email or a phone number."}
+            )
+        return attrs
 
 
 class CustomerListSerializer(serializers.ModelSerializer):

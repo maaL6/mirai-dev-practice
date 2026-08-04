@@ -25,6 +25,7 @@ frontend/coverage/
 .DS_Store
 Thumbs.db
 skills/
+*.zip
 overviewW1.md
 tv3_tasks.md
 .scratch/

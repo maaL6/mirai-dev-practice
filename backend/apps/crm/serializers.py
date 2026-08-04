@@ -24,6 +24,23 @@ class OpportunitySerializer(serializers.ModelSerializer):
             'owner': {'required': False},
         }
 
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            data = data.copy()
+            if 'customer_id' in data and 'customer' not in data:
+                data['customer'] = data.pop('customer_id')
+            if 'contact_id' in data and 'contact' not in data:
+                data['contact'] = data.pop('contact_id')
+                if data['contact'] == '':
+                    data['contact'] = None
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['customer_id'] = ret.get('customer')
+        ret['contact_id'] = ret.get('contact')
+        return ret
+
     def validate_expected_revenue(self, value):
         if value < 0:
             raise serializers.ValidationError("Expected revenue cannot be negative.")

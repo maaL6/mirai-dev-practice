@@ -35,6 +35,8 @@ class Migration(migrations.Migration):
                 null=True,
             ),
         ),
+        # Clean up existing rows that would violate the NOT NULL constraint
+        migrations.RunSQL("DELETE FROM crm_opportunity WHERE customer_id IS NULL;"),
         # 3. Make customer non-nullable (any existing rows without customer will fail)
         migrations.AlterField(
             model_name="opportunity",

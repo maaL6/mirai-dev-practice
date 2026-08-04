@@ -10,6 +10,7 @@ interface Contact {
   id: string;
   name: string;
   email: string;
+  is_active: boolean;
 }
 
 interface Stage {
@@ -90,13 +91,20 @@ export function OpportunityForm({ onClose, initialData }: OpportunityFormProps) 
       const csrfToken = getCookie('csrftoken');
       const method = initialData?.id ? 'PATCH' : 'POST';
       const url = initialData?.id ? `/api/crm/opportunities/${initialData.id}/` : '/api/crm/opportunities/';
+      const payload = {
+        name: data.name,
+        expected_revenue: data.expected_revenue,
+        customer: data.customer_id,
+        contact: data.contact_id || null,
+        stage: data.stage,
+      };
       const res = await fetch(url, {
         method,
         headers: { 
           'Content-Type': 'application/json',
           ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const errorData = await res.json();
@@ -159,9 +167,7 @@ export function OpportunityForm({ onClose, initialData }: OpportunityFormProps) 
           <label style={{ display: 'block', marginBottom: '0.5rem' }}>Contact</label>
           <select required name="contact_id" value={formData.contact_id} onChange={handleChange} style={{ width: '100%', padding: '0.5rem' }} disabled={!formData.customer_id}>
             <option value="">Select Contact</option>
-            {contacts?.map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
-            {/* Dummy contact to trigger the mock 400 validation */}
-            <option value="00000000-0000-0000-0000-000000000000">Dummy Contact (Triggers 400)</option>
+            {contacts?.filter(c => c.is_active).map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
           </select>
         </div>
         

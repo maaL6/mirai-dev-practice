@@ -5,10 +5,12 @@ import { OpportunityForm, OpportunityData } from '../components/OpportunityForm'
 interface Opportunity {
   id: string;
   name: string;
-  customer_id: string;
+  customer?: string;
+  customer_id?: string;
   stage: string;
   expected_revenue: string;
   owner: string;
+  contact?: string;
   contact_id?: string;
 }
 
@@ -44,7 +46,7 @@ export function CrmList() {
       let url = '/api/crm/opportunities/';
       const params = new URLSearchParams();
       if (filterStage) params.append('stage', filterStage);
-      if (filterCustomer) params.append('customer_id', filterCustomer);
+      if (filterCustomer) params.append('customer', filterCustomer);
       if (params.toString()) url += `?${params.toString()}`;
       
       const res = await fetch(url);
@@ -61,13 +63,16 @@ export function CrmList() {
 
   const opportunities = data || [];
 
+  const getCustomerName = (id: string) => customers?.find((c: { id: string; name: string }) => c.id === id)?.name || id;
+  const getStageName = (id: string) => stages?.find((s: { id: string; name: string }) => s.id === id)?.name || id;
+
   const handleEdit = (opp: Opportunity) => {
     setEditingOpp({
       id: opp.id,
       name: opp.name,
       expected_revenue: opp.expected_revenue,
-      customer_id: opp.customer_id,
-      contact_id: opp.contact_id || '',
+      customer_id: opp.customer || opp.customer_id || '',
+      contact_id: opp.contact || opp.contact_id || '',
       stage: opp.stage,
     });
     setShowForm(true);
@@ -131,8 +136,8 @@ export function CrmList() {
             {opportunities.map((opp: Opportunity) => (
               <tr key={opp.id} style={{ borderBottom: '1px solid #ccc' }}>
                 <td style={{ padding: '0.75rem' }}>{opp.name}</td>
-                <td style={{ padding: '0.75rem' }}>{opp.customer_id}</td>
-                <td style={{ padding: '0.75rem' }}>{opp.stage}</td>
+                <td style={{ padding: '0.75rem' }}>{getCustomerName(opp.customer || opp.customer_id || '')}</td>
+                <td style={{ padding: '0.75rem' }}>{getStageName(opp.stage)}</td>
                 <td style={{ padding: '0.75rem' }}>${opp.expected_revenue}</td>
                 <td style={{ padding: '0.75rem' }}>{opp.owner}</td>
                 <td style={{ padding: '0.75rem' }}>
