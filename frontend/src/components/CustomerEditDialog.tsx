@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CustomerForm, CustomerFormData } from './CustomerForm';
+import { apiClient } from '../lib/api-client';
 
 interface CustomerEditDialogProps {
   customer: any;
@@ -14,16 +15,7 @@ export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
-      const res = await fetch(`/api/customers/${customer.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        if (res.status === 403) throw new Error('Forbidden: You do not have permission to edit this customer.');
-        throw new Error('Failed to update customer');
-      }
-      return res.json();
+      return apiClient.patch(`/api/customers/${customer.id}/`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -31,7 +23,7 @@ export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
       setSubmitError('');
     },
     onError: (err: any) => {
-      setSubmitError(err.message);
+      setSubmitError(err.detail || err.message || 'Không thể cập nhật khách hàng.');
     }
   });
 
@@ -49,33 +41,26 @@ export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
         <Dialog.Content style={{
           backgroundColor: 'var(--surface-bg, white)',
           borderRadius: '8px',
+          padding: '1.5rem',
           position: 'fixed',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: '90vw',
-          maxWidth: '500px',
-          maxHeight: '85vh',
-          padding: '1.5rem',
-          overflowY: 'auto'
+          maxWidth: '450px',
         }}>
-          <Dialog.Title style={{ margin: '0 0 1rem 0' }}>Chỉnh sửa Khách hàng</Dialog.Title>
-          
+          <Dialog.Title style={{ margin: '0 0 1rem 0' }}>Sửa Khách hàng</Dialog.Title>
+
           {submitError && (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '4px', marginBottom: '1rem' }}>
+            <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.875rem' }}>
               {submitError}
             </div>
           )}
 
           <CustomerForm 
-            initialData={{
-              name: customer.name,
-              kind: customer.kind,
-              email: customer.email,
-              phone: customer.phone,
-            }}
-            onSubmit={(data) => mutation.mutate(data)}
-            isLoading={mutation.isPending}
+            initialData={customer}
+            onSubmit={(data) => mutation.mutate(data)} 
+            isLoading={mutation.isPending} 
           />
 
           <Dialog.Close asChild>

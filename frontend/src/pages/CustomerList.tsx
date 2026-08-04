@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { CustomerDialog } from '../components/CustomerDialog';
+import { apiClient } from '../lib/api-client';
 
 interface Customer {
   id: string;
@@ -13,15 +15,12 @@ interface Customer {
   updated_at: string;
 }
 
-import { Link } from 'react-router-dom';
-import { CustomerDialog } from '../components/CustomerDialog';
-
 export function CustomerList() {
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('');
   const [active, setActive] = useState('');
 
-  const { data, isLoading, isError, error } = useQuery<Customer[]>({
+  const { data, isLoading, isError, error } = useQuery<{ results: Customer[] } | Customer[]>({
     queryKey: ['customers', search, kind, active],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -29,13 +28,11 @@ export function CustomerList() {
       if (kind) params.append('kind', kind);
       if (active) params.append('active', active);
 
-      const res = await fetch(`/api/customers/?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      return res.json();
+      return apiClient.get(`/api/customers/?${params.toString()}`);
     },
   });
+
+  const customersList: Customer[] = Array.isArray(data) ? data : data?.results || [];
 
   return (
     <main className="main-content">
@@ -80,28 +77,25 @@ export function CustomerList() {
 
         {isLoading && (
           <div className="loading-state" style={{ padding: '2rem', textAlign: 'center' }}>
-            <div className="spinner" style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '3px solid var(--border-color)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Đang tải dữ liệu khách hàng...</p>
+            <p style={{ color: 'var(--text-muted)' }}>Đang tải dữ liệu khách hàng...</p>
           </div>
         )}
 
         {isError && (
           <div className="error-state" style={{ padding: '2rem', textAlign: 'center', backgroundColor: 'var(--danger-bg, #fee2e2)', borderRadius: '8px', color: 'var(--danger-text, #991b1b)' }}>
             <h3>Đã xảy ra lỗi khi tải dữ liệu</h3>
-            <p>{error instanceof Error ? error.message : 'Lỗi không xác định'}</p>
-            <p>Vui lòng thử lại sau hoặc liên hệ quản trị viên.</p>
+            <p>{(error as any)?.detail || (error instanceof Error ? error.message : 'Lỗi không xác định')}</p>
           </div>
         )}
 
-        {!isLoading && !isError && data && data.length === 0 && (
+        {!isLoading && !isError && customersList.length === 0 && (
           <div className="empty-state" style={{ padding: '4rem 2rem', textAlign: 'center', border: '1px dashed var(--border-color)', borderRadius: '8px' }}>
             <h3 style={{ marginBottom: '0.5rem' }}>Không tìm thấy kết quả</h3>
             <p style={{ color: 'var(--text-muted)' }}>Không có khách hàng nào khớp với bộ lọc và tìm kiếm của bạn.</p>
           </div>
         )}
 
-        {!isLoading && !isError && data && data.length > 0 && (
+        {!isLoading && !isError && customersList.length > 0 && (
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
@@ -113,16 +107,16 @@ export function CustomerList() {
               </tr>
             </thead>
             <tbody>
-              {data.map((customer) => (
+              {customersList.map((customer) => (
                 <tr key={customer.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '0.5rem' }}>
-                    <Link to={`/contacts/${customer.id}`} style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>
+                    <a href={`#/contacts/${customer.id}`} style={{ color: 'var(--accent-color, #2563eb)', textDecoration: 'none', fontWeight: 600 }}>
                       {customer.name}
-                    </Link>
+                    </a>
                   </td>
                   <td style={{ padding: '0.5rem' }}>{customer.kind === 'company' ? 'Công ty' : 'Cá nhân'}</td>
-                  <td style={{ padding: '0.5rem' }}>{customer.email}</td>
-                  <td style={{ padding: '0.5rem' }}>{customer.phone}</td>
+                  <td style={{ padding: '0.5rem' }}>{customer.email || '--'}</td>
+                  <td style={{ padding: '0.5rem' }}>{customer.phone || '--'}</td>
                   <td style={{ padding: '0.5rem' }}>
                     {customer.is_active ? 'Active' : 'Inactive'}
                   </td>

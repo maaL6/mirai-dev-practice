@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api-client';
 
 interface ContactFormProps {
   customerId: string;
@@ -18,19 +19,16 @@ export function ContactForm({ customerId }: ContactFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch(`/api/customers/${customerId}/contacts/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Failed to create contact');
-      return res.json();
+      return apiClient.post(`/api/customers/${customerId}/contacts/`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers', customerId, 'contacts'] });
       setOpen(false);
       setName(''); setPosition(''); setEmail(''); setPhone('');
     },
+    onError: (err: any) => {
+      setError(err.detail || 'Không thể tạo người liên hệ.');
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {

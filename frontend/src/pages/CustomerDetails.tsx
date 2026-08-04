@@ -1,8 +1,9 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ContactForm } from '../components/ContactForm';
 import { CustomerEditDialog } from '../components/CustomerEditDialog';
 import { useState } from 'react';
+import { apiClient } from '../lib/api-client';
 
 export function CustomerDetails({ id: propId }: { id?: string }) {
   const params = useParams<{ id: string }>();
@@ -13,40 +14,29 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
   const { data: customer, isLoading, isError, error } = useQuery({
     queryKey: ['customers', id],
     queryFn: async () => {
-      const res = await fetch(`/api/customers/${id}`);
-      if (res.status === 404) throw new Error('Not Found');
-      if (!res.ok) throw new Error('API Error');
-      return res.json();
+      return apiClient.get<any>(`/api/customers/${id}/`);
     },
+    enabled: !!id,
   });
 
   const { data: contacts } = useQuery({
     queryKey: ['customers', id, 'contacts'],
     queryFn: async () => {
-      const res = await fetch(`/api/customers/${id}/contacts/`);
-      if (!res.ok) return [];
-      return res.json();
+      return apiClient.get<any[]>(`/api/customers/${id}/contacts/`);
     },
-    enabled: !!customer && customer.kind === 'company',
+    enabled: !!id,
   });
 
   const deactivateMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/customers/${id}/deactivate/`, {
-        method: 'POST'
-      });
-      if (!res.ok) {
-        if (res.status === 403) throw new Error('Bạn không có quyền vô hiệu hóa khách hàng này.');
-        throw new Error('Lỗi hệ thống');
-      }
-      return res.json();
+      return apiClient.post(`/api/customers/${id}/deactivate/`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       setDeactivateError('');
     },
     onError: (err: any) => {
-      setDeactivateError(err.message);
+      setDeactivateError(err.detail || err.message || 'Bạn không có quyền hoặc có lỗi hệ thống.');
     }
   });
 
@@ -58,12 +48,12 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
     );
   }
 
-  if (isError && error?.message === 'Not Found') {
+  if (isError && (error as any)?.status === 404) {
     return (
       <main className="main-content">
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h2>404 - Khách hàng không tồn tại</h2>
-          <Link to="/contacts" className="button">Trở về danh sách khách hàng</Link>
+          <a href="#/contacts" className="button">Trở về danh sách khách hàng</a>
         </div>
       </main>
     );
@@ -73,7 +63,7 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
     return (
       <main className="main-content">
         <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
-          Đã xảy ra lỗi khi tải dữ liệu
+          {(error as any)?.detail || 'Đã xảy ra lỗi khi tải dữ liệu'}
         </div>
       </main>
     );
@@ -87,13 +77,15 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
 
   if (!customer) return null;
 
+  const contactsList = Array.isArray(contacts) ? contacts : (contacts as any)?.results || customer.contacts || [];
+
   return (
     <main className="main-content">
       <header className="topbar">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div>
             <p className="eyebrow">
-              <Link to="/contacts" style={{ color: 'inherit', textDecoration: 'none' }}>Customers</Link> / {customer?.name}
+              <a href="#/contacts" style={{ color: 'inherit', textDecoration: 'none' }}>Customers</a> / {customer?.name}
             </p>
             <h1>{customer?.name}</h1>
           </div>
@@ -123,44 +115,45 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
         <div style={{ backgroundColor: 'var(--surface-bg, white)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <h3>Thông tin chung</h3>
           <p><strong>Loại:</strong> {customer?.kind === 'company' ? 'Công ty' : 'Cá nhân'}</p>
-          <p><strong>Email:</strong> {customer?.email}</p>
-          <p><strong>Điện thoại:</strong> {customer?.phone}</p>
+          <p><strong>Email:</strong> {customer?.email || '--'}</p>
+          <p><strong>Điện thoại:</strong> {customer?.phone || '--'}</p>
           <p><strong>Trạng thái:</strong> {customer?.is_active ? 'Active' : 'Inactive'}</p>
         </div>
 
-        {customer?.kind === 'company' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3>Người liên hệ (Contacts)</h3>
-              <ContactForm customerId={id!} />
-            </div>
-            
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
-                  <th style={{ padding: '0.5rem' }}>Tên</th>
-                  <th style={{ padding: '0.5rem' }}>Chức vụ</th>
-                  <th style={{ padding: '0.5rem' }}>Email</th>
-                  <th style={{ padding: '0.5rem' }}>Điện thoại</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts?.length > 0 ? contacts.map((c: any) => (
-                  <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.5rem' }}>{c.name}</td>
-                    <td style={{ padding: '0.5rem' }}>{c.position}</td>
-                    <td style={{ padding: '0.5rem' }}>{c.email}</td>
-                    <td style={{ padding: '0.5rem' }}>{c.phone}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có người liên hệ nào.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3>Người liên hệ (Contacts)</h3>
+            <ContactForm customerId={id!} />
           </div>
-        )}
+          
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                <th style={{ padding: '0.5rem' }}>Tên</th>
+                <th style={{ padding: '0.5rem' }}>Chức vụ</th>
+                <th style={{ padding: '0.5rem' }}>Email</th>
+                <th style={{ padding: '0.5rem' }}>Điện thoại</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contactsList.length > 0 ? contactsList.map((c: any) => (
+                <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '0.5rem' }}>
+                    <strong>{c.name}</strong>
+                    {c.is_primary && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', padding: '0.1rem 0.4rem', background: '#dcfce7', color: '#15803d', borderRadius: '4px' }}>Chính</span>}
+                  </td>
+                  <td style={{ padding: '0.5rem' }}>{c.position || c.job_title || '--'}</td>
+                  <td style={{ padding: '0.5rem' }}>{c.email || '--'}</td>
+                  <td style={{ padding: '0.5rem' }}>{c.phone || '--'}</td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có người liên hệ nào.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   );

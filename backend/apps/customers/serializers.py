@@ -4,6 +4,8 @@ from .models import Contact, Customer
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    position = serializers.CharField(source="job_title", required=False, allow_blank=True)
+
     class Meta:
         model = Contact
         fields = [
@@ -11,6 +13,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "customer",
             "name",
             "job_title",
+            "position",
             "email",
             "phone",
             "is_primary",
