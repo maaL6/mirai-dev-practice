@@ -5,7 +5,7 @@ addopts = "--strict-markers --disable-warnings --cov=apps --cov-report=term-miss
 
 [tool.coverage.run]
 branch = true
-omit = ["*/migrations/*", "*/tests/*", "manage.py"]
+omit = ["*/migrations/*", "*/tests/*", "manage.py", "apps/*/apps.py"]
 
 [tool.ruff]
 target-version = "py313"

@@ -101,3 +101,29 @@ class UserCRUDTestCase(TestCase):
         response = self.client.get(f"/api/users/{self.member.pk}/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["email"], "member@example.test")
+
+    def test_user_str_representation(self):
+        self.assertEqual(str(self.admin), "System Admin")
+        no_name_user = User.objects.create_user(email="noname@example.test", password="pwd")
+        self.assertEqual(str(no_name_user), "noname")
+
+    def test_create_user_without_email_raises_error(self):
+        with self.assertRaises(ValueError):
+            User.objects.create_user(email="")
+
+    def test_create_superuser(self):
+        superuser = User.objects.create_superuser(email="super@example.test", password="pwd")
+        self.assertTrue(superuser.is_staff)
+        self.assertTrue(superuser.is_superuser)
+        self.assertEqual(superuser.role, User.Role.ADMIN)
+
+    def test_create_superuser_invalid_flags(self):
+        with self.assertRaises(ValueError):
+            User.objects.create_superuser(
+                email="s1@example.test", password="pwd", is_staff=False
+            )
+        with self.assertRaises(ValueError):
+            User.objects.create_superuser(
+                email="s2@example.test", password="pwd", is_superuser=False
+            )
+
