@@ -115,6 +115,55 @@
   background: rgb(255 255 255 / 8%);
   font-size: 0.7rem;
   font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sidebar__user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar__user-info strong,
+.sidebar__user-info small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__user-info small {
+  margin-top: 0.1rem;
+  color: var(--color-sidebar-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.logout-btn {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.4rem;
+  background: rgb(255 255 255 / 5%);
+  color: var(--color-sidebar-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: rgb(255 255 255 / 12%);
+  color: white;
+  border-color: rgb(255 255 255 / 20%);
+}
+
+.logout-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .main-content {
