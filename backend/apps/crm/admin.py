@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Stage, Opportunity
+
+from .models import Opportunity, Stage
+
 
 @admin.register(Stage)
 class StageAdmin(admin.ModelAdmin):

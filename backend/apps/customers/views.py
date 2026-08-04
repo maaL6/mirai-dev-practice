@@ -28,7 +28,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
         # Filters
         search = self.request.query_params.get("search", "").strip()
         kind = self.request.query_params.get("kind", "").strip()
-        active = self.request.query_params.get("is_active") or self.request.query_params.get("active")
+        params = self.request.query_params
+        active = params.get("is_active") or params.get("active")
 
         if search:
             qs = qs.filter(

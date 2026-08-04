@@ -34,7 +34,7 @@ export function UserManagementPage() {
     setError(null);
     try {
       const res = await authApi.listUsers();
-      const list = Array.isArray(res) ? res : (res as any)?.results || [];
+      const list = Array.isArray(res) ? res : (res as { results?: User[] })?.results || [];
       setUsers(list);
     } catch (err: unknown) {
       if (isApiRequestError(err)) {

@@ -59,11 +59,12 @@ export function ProductFormDialog({
       }
       onSuccess();
       onClose();
-    } catch (err: any) {
-      if (err.fields) {
-        setFieldErrors(err.fields);
+    } catch (err: unknown) {
+      const errObj = err as { fields?: Record<string, string[]>; detail?: string };
+      if (errObj.fields) {
+        setFieldErrors(errObj.fields);
       }
-      setError(err.detail || "Không thể lưu thông tin sản phẩm.");
+      setError(errObj.detail || "Không thể lưu thông tin sản phẩm.");
     } finally {
       setIsSubmitting(false);
     }

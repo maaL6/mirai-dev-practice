@@ -5,24 +5,44 @@ import { CustomerEditDialog } from '../components/CustomerEditDialog';
 import { useState } from 'react';
 import { apiClient } from '../lib/api-client';
 
+type CustomerItem = {
+  id: string;
+  name: string;
+  kind: 'company' | 'individual';
+  email?: string;
+  phone?: string;
+  is_active: boolean;
+  contacts?: ContactItem[];
+};
+
+type ContactItem = {
+  id: string;
+  name: string;
+  position?: string;
+  job_title?: string;
+  email?: string;
+  phone?: string;
+  is_primary?: boolean;
+};
+
 export function CustomerDetails({ id: propId }: { id?: string }) {
   const params = useParams<{ id: string }>();
   const id = propId || params.id;
   const queryClient = useQueryClient();
   const [deactivateError, setDeactivateError] = useState('');
 
-  const { data: customer, isLoading, isError, error } = useQuery({
+  const { data: customer, isLoading, isError, error } = useQuery<CustomerItem>({
     queryKey: ['customers', id],
     queryFn: async () => {
-      return apiClient.get<any>(`/api/customers/${id}/`);
+      return apiClient.get<CustomerItem>(`/api/customers/${id}/`);
     },
     enabled: !!id,
   });
 
-  const { data: contacts } = useQuery({
+  const { data: contacts } = useQuery<ContactItem[]>({
     queryKey: ['customers', id, 'contacts'],
     queryFn: async () => {
-      return apiClient.get<any[]>(`/api/customers/${id}/contacts/`);
+      return apiClient.get<ContactItem[]>(`/api/customers/${id}/contacts/`);
     },
     enabled: !!id,
   });
@@ -35,8 +55,9 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       setDeactivateError('');
     },
-    onError: (err: any) => {
-      setDeactivateError(err.detail || err.message || 'Bạn không có quyền hoặc có lỗi hệ thống.');
+    onError: (err: unknown) => {
+      const errObj = err as { detail?: string; message?: string };
+      setDeactivateError(errObj.detail || errObj.message || 'Bạn không có quyền hoặc có lỗi hệ thống.');
     }
   });
 
@@ -48,7 +69,7 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
     );
   }
 
-  if (isError && (error as any)?.status === 404) {
+  if (isError && (error as { status?: number })?.status === 404) {
     return (
       <main className="main-content">
         <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -63,7 +84,7 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
     return (
       <main className="main-content">
         <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
-          {(error as any)?.detail || 'Đã xảy ra lỗi khi tải dữ liệu'}
+          {(error as { detail?: string })?.detail || 'Đã xảy ra lỗi khi tải dữ liệu'}
         </div>
       </main>
     );
@@ -77,7 +98,9 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
 
   if (!customer) return null;
 
-  const contactsList = Array.isArray(contacts) ? contacts : (contacts as any)?.results || customer.contacts || [];
+  const contactsList: ContactItem[] = Array.isArray(contacts)
+    ? contacts
+    : (contacts as unknown as { results?: ContactItem[] })?.results || customer.contacts || [];
 
   return (
     <main className="main-content">
@@ -136,7 +159,7 @@ export function CustomerDetails({ id: propId }: { id?: string }) {
               </tr>
             </thead>
             <tbody>
-              {contactsList.length > 0 ? contactsList.map((c: any) => (
+              {contactsList.length > 0 ? contactsList.map((c: ContactItem) => (
                 <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '0.5rem' }}>
                     <strong>{c.name}</strong>

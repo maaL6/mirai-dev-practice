@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.identity.permissions import IsManagerOrAdmin
+
 from .models import Product
 from .serializers import ProductSerializer
 
@@ -24,12 +25,15 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Product.objects.all()
 
-        search = self.request.query_params.get("search", "").strip()
-        active = self.request.query_params.get("is_active") or self.request.query_params.get("active")
+        params = self.request.query_params
+        search = params.get("search", "").strip()
+        active = params.get("is_active") or params.get("active")
 
         if search:
             qs = qs.filter(
-                Q(sku__icontains=search) | Q(name__icontains=search) | Q(description__icontains=search)
+                Q(sku__icontains=search)
+                | Q(name__icontains=search)
+                | Q(description__icontains=search)
             )
 
         if active is not None and active != "":
@@ -38,7 +42,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return qs.order_by("sku")
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated, IsManagerOrAdmin])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsManagerOrAdmin],
+    )
     def deactivate(self, request, pk=None):
         product = self.get_object()
         product.is_active = False

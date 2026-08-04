@@ -1,4 +1,5 @@
 import uuid
+
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -16,11 +17,18 @@ class Product(models.Model):
     class Meta:
         ordering = ["sku"]
 
+    def __str__(self):
+        return f"[{self.sku}] {self.name}"
+
+    def save(self, *args, **kwargs):
+        if self.sku:
+            self.sku = self.sku.upper().strip()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def clean(self):
         super().clean()
         if self.sku:
-            self.sku = self.sku.upper().strip()
-            # Check case-insensitive uniqueness
             qs = Product.objects.filter(sku__iexact=self.sku)
             if self.pk:
                 qs = qs.exclude(pk=self.pk)
@@ -29,12 +37,3 @@ class Product(models.Model):
 
         if self.unit_price is not None and self.unit_price < 0:
             raise ValidationError({"unit_price": "Unit price cannot be negative."})
-
-    def save(self, *args, **kwargs):
-        if self.sku:
-            self.sku = self.sku.upper().strip()
-        self.full_clean()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"[{self.sku}] {self.name}"

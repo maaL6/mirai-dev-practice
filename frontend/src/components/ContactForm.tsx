@@ -18,7 +18,7 @@ export function ContactForm({ customerId }: ContactFormProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Record<string, string>) => {
       return apiClient.post(`/api/customers/${customerId}/contacts/`, data);
     },
     onSuccess: () => {
@@ -26,8 +26,9 @@ export function ContactForm({ customerId }: ContactFormProps) {
       setOpen(false);
       setName(''); setPosition(''); setEmail(''); setPhone('');
     },
-    onError: (err: any) => {
-      setError(err.detail || 'Không thể tạo người liên hệ.');
+    onError: (err: unknown) => {
+      const detail = (err as { detail?: string })?.detail;
+      setError(detail || 'Không thể tạo người liên hệ.');
     }
   });
 

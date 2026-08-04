@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
@@ -102,6 +103,6 @@ class ProductApiTests(TestCase):
         self.client.force_authenticate(user=self.member)
         res = self.client.get("/api/products/?search=Implementation")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        results = res.data["results"] if isinstance(res.data, dict) and "results" in res.data else res.data
+        results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["sku"], "SRV-001")

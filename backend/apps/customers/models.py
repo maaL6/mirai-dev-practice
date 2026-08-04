@@ -1,4 +1,5 @@
 import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -51,12 +52,12 @@ class Contact(models.Model):
     class Meta:
         ordering = ["-is_primary", "-created_at"]
 
+    def __str__(self):
+        return f"{self.name} - {self.customer.name}"
+
     def save(self, *args, **kwargs):
         if self.is_primary:
             Contact.objects.filter(
                 customer=self.customer, is_primary=True
             ).exclude(pk=self.pk).update(is_primary=False)
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name} - {self.customer.name}"

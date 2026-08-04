@@ -2,7 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from apps.identity.models import User
-from apps.identity.permissions import IsAdmin, IsManagerOrAdmin, is_owner_or_assignee
+from apps.identity.permissions import is_owner_or_assignee
 
 
 class PermissionClassesTestCase(TestCase):

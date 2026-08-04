@@ -10,6 +10,19 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { apiClient } from "../../lib/api-client";
 import { ProjectData, ProjectFormDialog } from "./ProjectFormDialog";
 
+export type ProjectItem = {
+  id: string;
+  name: string;
+  customer: string;
+  customer_detail?: { id: string; name: string };
+  manager: string;
+  manager_detail?: { id: string; first_name: string; last_name: string };
+  status: string;
+  start_date: string;
+  due_date: string;
+  description?: string;
+};
+
 export function ProjectListPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -21,7 +34,7 @@ export function ProjectListPage() {
 
   const canManage = user?.role === "admin" || user?.role === "manager";
 
-  const { data, isLoading, isError, error } = useQuery<{ results: any[] } | any[]>({
+  const { data, isLoading, isError, error } = useQuery<{ results: ProjectItem[] } | ProjectItem[]>({
     queryKey: ["projects", search, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -31,13 +44,13 @@ export function ProjectListPage() {
     },
   });
 
-  const projects: any[] = Array.isArray(data) ? data : data?.results || [];
+  const projects: ProjectItem[] = Array.isArray(data) ? data : data?.results || [];
 
-  const columns: Column<any>[] = [
+  const columns: Column<ProjectItem>[] = [
     {
       key: "name",
       header: "Tên dự án",
-      render: (p: any) => (
+      render: (p: ProjectItem) => (
         <a href={`#/projects/${p.id}`} style={{ fontWeight: 600, color: "var(--brand-color, #2563eb)" }}>
           {p.name}
         </a>
@@ -46,12 +59,12 @@ export function ProjectListPage() {
     {
       key: "customer",
       header: "Khách hàng",
-      render: (p: any) => <span>{p.customer_detail?.name || p.customer}</span>,
+      render: (p: ProjectItem) => <span>{p.customer_detail?.name || p.customer}</span>,
     },
     {
       key: "manager",
       header: "Quản lý dự án",
-      render: (p: any) => (
+      render: (p: ProjectItem) => (
         <span>
           {p.manager_detail
             ? `${p.manager_detail.first_name} ${p.manager_detail.last_name}`
@@ -62,7 +75,7 @@ export function ProjectListPage() {
     {
       key: "status",
       header: "Trạng thái",
-      render: (p: any) => {
+      render: (p: ProjectItem) => {
         const stateMap: Record<string, "ready" | "checking" | "offline"> = {
           planning: "checking",
           in_progress: "ready",
@@ -78,7 +91,7 @@ export function ProjectListPage() {
     {
       key: "dates",
       header: "Thời gian",
-      render: (p: any) => (
+      render: (p: ProjectItem) => (
         <small style={{ color: "var(--text-muted)" }}>
           {p.start_date} → {p.due_date}
         </small>
@@ -89,7 +102,7 @@ export function ProjectListPage() {
           {
             key: "actions",
             header: "Thao tác",
-            render: (p: any) => (
+            render: (p: ProjectItem) => (
               <Button
                 variant="quiet"
                 onClick={() => {
@@ -155,7 +168,7 @@ export function ProjectListPage() {
 
       {isError && (
         <div className="alert alert--error">
-          {(error as any)?.detail || "Không thể tải danh sách dự án."}
+          {(error as { detail?: string })?.detail || "Không thể tải danh sách dự án."}
         </div>
       )}
 

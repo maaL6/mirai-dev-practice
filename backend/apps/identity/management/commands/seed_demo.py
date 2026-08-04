@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 
 from apps.customers.models import Contact, Customer
@@ -51,7 +52,10 @@ _DEMO_PASSWORD = "local-demo-password"
 
 
 class Command(BaseCommand):
-    help = "Seed demo users, customers, products, projects, and tasks (idempotent — safe to run multiple times)."
+    help = (
+        "Seed demo users, customers, products, projects, and tasks "
+        "(idempotent — safe to run multiple times)."
+    )
 
     def handle(self, *args, **options):
         users = {}

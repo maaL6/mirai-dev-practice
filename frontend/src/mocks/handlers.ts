@@ -3,7 +3,7 @@ import { http, HttpResponse, delay } from 'msw';
 let customersData = [
   {
     id: '11111111-1111-1111-1111-111111111111',
-    name: 'Acme Ltd',
+    name: 'Acme Corp',
     kind: 'company',
     email: 'contact@acme.com',
     phone: '123-456-7890',
@@ -14,9 +14,9 @@ let customersData = [
   },
   {
     id: '22222222-2222-2222-2222-222222222222',
-    name: 'Nova Studio',
+    name: 'Global Tech',
     kind: 'company',
-    email: 'hello@novastudio.com',
+    email: 'info@globaltech.com',
     phone: '987-654-3210',
     owner: 'minh@example.test',
     is_active: true,
@@ -25,7 +25,7 @@ let customersData = [
   },
 ];
 
-let contactsData: Record<string, any[]> = {
+const contactsData: Record<string, Record<string, unknown>[]> = {
   '11111111-1111-1111-1111-111111111111': [
     { id: '33333333-3333-3333-3333-333333333333', name: 'Alice', position: 'CEO', email: 'alice@acme.com', phone: '111-222' }
   ]
@@ -33,28 +33,26 @@ let contactsData: Record<string, any[]> = {
 
 export const handlers = [
   http.get('/api/customers/', async ({ request }) => {
-    await delay(1000); // Tăng delay để hiển thị skeleton/spinner rõ hơn
-    
+    await delay(500);
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.toLowerCase() || '';
     const kind = url.searchParams.get('kind') || '';
-    const active = url.searchParams.get('active');
+    const active = url.searchParams.get('active') || '';
 
-    let data = [...customersData];
+    let data = customersData;
 
     if (search) {
       data = data.filter(c => 
         c.name.toLowerCase().includes(search) || 
-        c.email.toLowerCase().includes(search) || 
-        c.phone.includes(search)
+        c.email.toLowerCase().includes(search)
       );
     }
-    
+
     if (kind) {
       data = data.filter(c => c.kind === kind);
     }
 
-    if (active !== null && active !== '') {
+    if (active) {
       const isActiveBool = active === 'true';
       data = data.filter(c => c.is_active === isActiveBool);
     }
@@ -64,7 +62,7 @@ export const handlers = [
 
   http.post('/api/customers/', async ({ request }) => {
     await delay(1000);
-    const body = await request.json() as any;
+    const body = (await request.json()) as Record<string, string>;
     
     if (!body.name) {
       return HttpResponse.json({ detail: 'Name is required' }, { status: 400 });
@@ -106,7 +104,7 @@ export const handlers = [
   http.post('/api/customers/:id/contacts/', async ({ params, request }) => {
     await delay(500);
     const { id } = params;
-    const body = await request.json() as any;
+    const body = (await request.json()) as Record<string, string>;
     
     if (!body.name) {
       return HttpResponse.json({ detail: 'Name is required' }, { status: 400 });
@@ -141,7 +139,7 @@ export const handlers = [
       return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
     }
 
-    const body = await request.json() as any;
+    const body = (await request.json()) as Record<string, unknown>;
     customersData[customerIndex] = { ...customersData[customerIndex], ...body };
     
     return HttpResponse.json(customersData[customerIndex]);
@@ -160,8 +158,11 @@ export const handlers = [
       return HttpResponse.json({ detail: 'Not found' }, { status: 404 });
     }
 
-    customersData[customerIndex].is_active = false;
-    
+    customersData[customerIndex] = {
+      ...customersData[customerIndex],
+      is_active: false,
+    };
+
     return HttpResponse.json(customersData[customerIndex]);
   }),
 ];

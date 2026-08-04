@@ -14,6 +14,29 @@ type ProjectDetailsPageProps = {
   id?: string;
 };
 
+type TaskItem = {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  completed_at?: string | null;
+  assignee_detail?: { id: string; first_name: string; last_name: string };
+};
+
+type ProjectDetail = {
+  id: string;
+  name: string;
+  status: string;
+  start_date: string;
+  due_date: string;
+  description?: string;
+  customer: string;
+  customer_detail?: { id: string; name: string };
+  manager: string;
+  manager_detail?: { id: string; first_name: string; last_name: string };
+  tasks?: TaskItem[];
+};
+
 export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -21,18 +44,18 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
 
   const canManage = user?.role === "admin" || user?.role === "manager";
 
-  const { data: project, isLoading, isError, error } = useQuery({
+  const { data: project, isLoading, isError, error } = useQuery<ProjectDetail>({
     queryKey: ["project", id],
     queryFn: async () => {
-      return apiClient.get<any>(`/api/projects/${id}/`);
+      return apiClient.get<ProjectDetail>(`/api/projects/${id}/`);
     },
     enabled: !!id,
   });
 
-  const { data: tasksData, isLoading: isTasksLoading } = useQuery({
+  const { data: tasksData, isLoading: isTasksLoading } = useQuery<{ results: TaskItem[] } | TaskItem[]>({
     queryKey: ["project-tasks", id],
     queryFn: async () => {
-      return apiClient.get<any>(`/api/projects/${id}/tasks/`);
+      return apiClient.get<{ results: TaskItem[] } | TaskItem[]>(`/api/projects/${id}/tasks/`);
     },
     enabled: !!id,
   });
@@ -47,13 +70,13 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
     },
   });
 
-  const tasks: any[] = Array.isArray(tasksData) ? tasksData : (tasksData as any)?.results || project?.tasks || [];
+  const tasks: TaskItem[] = Array.isArray(tasksData) ? tasksData : tasksData?.results || project?.tasks || [];
 
-  const taskColumns: Column<any>[] = [
+  const taskColumns: Column<TaskItem>[] = [
     {
       key: "title",
       header: "Công việc",
-      render: (t: any) => (
+      render: (t: TaskItem) => (
         <div>
           <strong>{t.title}</strong>
           {t.description && (
@@ -67,7 +90,7 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
     {
       key: "assignee",
       header: "Người thực hiện",
-      render: (t: any) => (
+      render: (t: TaskItem) => (
         <span>
           {t.assignee_detail
             ? `${t.assignee_detail.first_name} ${t.assignee_detail.last_name}`
@@ -78,7 +101,7 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
     {
       key: "status",
       header: "Trạng thái",
-      render: (t: any) => (
+      render: (t: TaskItem) => (
         <SelectInput
           value={t.status}
           onChange={(e) =>
@@ -99,7 +122,7 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
     {
       key: "completed_at",
       header: "Thời gian hoàn thành",
-      render: (t: any) => (
+      render: (t: TaskItem) => (
         <small style={{ color: "var(--text-muted)" }}>
           {t.completed_at
             ? new Date(t.completed_at).toLocaleString("vi-VN")
@@ -117,7 +140,7 @@ export function ProjectDetailsPage({ id }: ProjectDetailsPageProps) {
     return (
       <div style={{ padding: "2rem" }}>
         <div className="alert alert--error">
-          {(error as any)?.detail || "Không tìm thấy dự án."}
+          {(error as { detail?: string })?.detail || "Không tìm thấy dự án."}
         </div>
         <a href="#/projects" className="button button--quiet" style={{ marginTop: "1rem" }}>
           ← Quay lại danh sách

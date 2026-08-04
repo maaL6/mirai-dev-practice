@@ -144,7 +144,7 @@ export function ProductListPage() {
 
       {isError && (
         <div className="alert alert--error">
-          {(error as any)?.detail || "Không thể tải danh sách sản phẩm."}
+          {(error as { detail?: string })?.detail || "Không thể tải danh sách sản phẩm."}
         </div>
       )}
 

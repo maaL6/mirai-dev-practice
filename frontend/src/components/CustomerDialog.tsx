@@ -18,8 +18,9 @@ export function CustomerDialog() {
       setOpen(false);
       setSubmitError('');
     },
-    onError: (err: any) => {
-      setSubmitError(err.detail || 'Không thể tạo khách hàng.');
+    onError: (err: unknown) => {
+      const detail = (err as { detail?: string })?.detail;
+      setSubmitError(detail || 'Không thể tạo khách hàng.');
     }
   });
 

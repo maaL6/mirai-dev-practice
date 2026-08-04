@@ -82,7 +82,7 @@ class CustomerApiTests(TestCase):
         res = self.client.get("/api/customers/")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # Should return list with customer1 only (not customer2)
-        results = res.data["results"] if isinstance(res.data, dict) and "results" in res.data else res.data
+        results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         customer_ids = [c["id"] for c in results]
         self.assertIn(str(self.customer1.id), customer_ids)
         self.assertNotIn(str(self.customer2.id), customer_ids)
@@ -91,14 +91,14 @@ class CustomerApiTests(TestCase):
         self.client.force_authenticate(user=self.admin)
         res = self.client.get("/api/customers/")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        results = res.data["results"] if isinstance(res.data, dict) and "results" in res.data else res.data
+        results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         self.assertEqual(len(results), 2)
 
     def test_customer_search_by_contact_name(self):
         self.client.force_authenticate(user=self.admin)
         res = self.client.get("/api/customers/?search=Linh")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        results = res.data["results"] if isinstance(res.data, dict) and "results" in res.data else res.data
+        results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["name"], "Acme Ltd")
 

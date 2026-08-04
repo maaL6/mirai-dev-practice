@@ -33,10 +33,10 @@ export function ProjectFormDialog({
   const [customer, setCustomer] = useState(project?.customer || "");
   const [status, setStatus] = useState(project?.status || "planning");
   const [startDate, setStartDate] = useState(
-    project?.start_date || new Date().toISOString().slice(0, 10)
+    () => project?.start_date || new Date().toISOString().slice(0, 10)
   );
   const [dueDate, setDueDate] = useState(
-    project?.due_date || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
+    () => project?.due_date || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
   );
   const [description, setDescription] = useState(project?.description || "");
 
@@ -48,11 +48,11 @@ export function ProjectFormDialog({
   useEffect(() => {
     apiClient
       .get<{ results: { id: string; name: string }[] } | { id: string; name: string }[]>("/api/customers/")
-      .then((res: any) => {
+      .then((res) => {
         const list = Array.isArray(res) ? res : res?.results || [];
         setCustomersList(list);
-        if (list.length > 0 && !customer) {
-          setCustomer(list[0].id);
+        if (list.length > 0) {
+          setCustomer((prev) => prev || list[0].id);
         }
       })
       .catch(() => {});
@@ -81,11 +81,12 @@ export function ProjectFormDialog({
       }
       onSuccess();
       onClose();
-    } catch (err: any) {
-      if (err.fields) {
-        setFieldErrors(err.fields);
+    } catch (err: unknown) {
+      const errObj = err as { fields?: Record<string, string[]>; detail?: string };
+      if (errObj.fields) {
+        setFieldErrors(errObj.fields);
       }
-      setError(err.detail || "Không thể lưu thông tin dự án.");
+      setError(errObj.detail || "Không thể lưu thông tin dự án.");
     } finally {
       setIsSubmitting(false);
     }

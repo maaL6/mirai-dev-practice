@@ -5,7 +5,7 @@ import { CustomerForm, CustomerFormData } from './CustomerForm';
 import { apiClient } from '../lib/api-client';
 
 interface CustomerEditDialogProps {
-  customer: any;
+  customer: { id: string; name?: string; kind?: 'company' | 'individual'; email?: string; phone?: string };
 }
 
 export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
@@ -22,8 +22,9 @@ export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
       setOpen(false);
       setSubmitError('');
     },
-    onError: (err: any) => {
-      setSubmitError(err.detail || err.message || 'Không thể cập nhật khách hàng.');
+    onError: (err: unknown) => {
+      const detail = (err as { detail?: string; message?: string })?.detail || (err as { message?: string })?.message;
+      setSubmitError(detail || 'Không thể cập nhật khách hàng.');
     }
   });
 
@@ -58,7 +59,7 @@ export function CustomerEditDialog({ customer }: CustomerEditDialogProps) {
           )}
 
           <CustomerForm 
-            initialData={customer}
+            initialData={customer as CustomerFormData}
             onSubmit={(data) => mutation.mutate(data)} 
             isLoading={mutation.isPending} 
           />

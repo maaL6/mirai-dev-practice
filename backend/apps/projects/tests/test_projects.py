@@ -1,4 +1,5 @@
 import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
@@ -83,7 +84,8 @@ class ProjectApiTests(TestCase):
         self.assertIsNotNone(self.task.completed_at)
 
         # Move back to in_progress
-        res_reopen = self.client.patch(f"/api/tasks/{self.task.id}/", {"status": "in_progress"}, format="json")
+        task_url = f"/api/tasks/{self.task.id}/"
+        res_reopen = self.client.patch(task_url, {"status": "in_progress"}, format="json")
         self.assertEqual(res_reopen.status_code, status.HTTP_200_OK)
         self.task.refresh_from_db()
         self.assertIsNone(self.task.completed_at)
@@ -101,5 +103,6 @@ class ProjectApiTests(TestCase):
 
     def test_manager_cannot_edit_other_manager_project(self):
         self.client.force_authenticate(user=self.manager2)
-        res = self.client.patch(f"/api/projects/{self.project.id}/", {"name": "Hacked Name"}, format="json")
+        proj_url = f"/api/projects/{self.project.id}/"
+        res = self.client.patch(proj_url, {"name": "Hacked Name"}, format="json")
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)

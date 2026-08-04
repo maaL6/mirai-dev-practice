@@ -13,6 +13,13 @@ type TaskFormDialogProps = {
   onSuccess: () => void;
 };
 
+type UserItem = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+};
+
 export function TaskFormDialog({
   projectId,
   open,
@@ -25,15 +32,15 @@ export function TaskFormDialog({
   const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
 
-  const [usersList, setUsersList] = useState<{ id: string; first_name: string; last_name: string; email: string }[]>([]);
+  const [usersList, setUsersList] = useState<UserItem[]>([]);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     apiClient
-      .get<{ results: any[] } | any[]>("/api/users/")
-      .then((res: any) => {
+      .get<{ results: UserItem[] } | UserItem[]>("/api/users/")
+      .then((res) => {
         const list = Array.isArray(res) ? res : res?.results || [];
         setUsersList(list);
       })
@@ -58,11 +65,12 @@ export function TaskFormDialog({
       await apiClient.post(`/api/projects/${projectId}/tasks/`, payload);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      if (err.fields) {
-        setFieldErrors(err.fields);
+    } catch (err: unknown) {
+      const errObj = err as { fields?: Record<string, string[]>; detail?: string };
+      if (errObj.fields) {
+        setFieldErrors(errObj.fields);
       }
-      setError(err.detail || "Không thể tạo công việc.");
+      setError(errObj.detail || "Không thể tạo công việc.");
     } finally {
       setIsSubmitting(false);
     }

@@ -93,14 +93,14 @@ export function CrmList() {
             <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Filter by Stage</label>
             <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
               <option value="">All Stages</option>
-              {stages?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {stages?.map((s: { id: string; name: string }) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem' }}>Filter by Customer</label>
             <select value={filterCustomer} onChange={(e) => setFilterCustomer(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}>
               <option value="">All Customers</option>
-              {customers?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {customers?.map((c: { id: string; name: string }) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
         </div>

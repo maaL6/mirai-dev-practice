@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from apps.identity.serializers import UserSerializer
+
 from .models import Contact, Customer
 
 

@@ -84,7 +84,7 @@ export function CustomerList() {
         {isError && (
           <div className="error-state" style={{ padding: '2rem', textAlign: 'center', backgroundColor: 'var(--danger-bg, #fee2e2)', borderRadius: '8px', color: 'var(--danger-text, #991b1b)' }}>
             <h3>Đã xảy ra lỗi khi tải dữ liệu</h3>
-            <p>{(error as any)?.detail || (error instanceof Error ? error.message : 'Lỗi không xác định')}</p>
+            <p>{(error as { detail?: string })?.detail || (error instanceof Error ? error.message : 'Lỗi không xác định')}</p>
           </div>
         )}
 

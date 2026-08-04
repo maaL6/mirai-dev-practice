@@ -1,4 +1,5 @@
 import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -44,19 +45,19 @@ class Project(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def clean(self):
         super().clean()
         if self.start_date and self.due_date and self.due_date < self.start_date:
             raise ValidationError(
                 {"due_date": "Project due date cannot be before start date."}
             )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
 
 class Task(models.Model):
@@ -95,6 +96,9 @@ class Task(models.Model):
     class Meta:
         ordering = ["position", "created_at"]
 
+    def __str__(self):
+        return f"{self.title} ({self.project.name})"
+
     def save(self, *args, **kwargs):
         if self.pk:
             old_instance = Task.objects.filter(pk=self.pk).first()
@@ -108,6 +112,3 @@ class Task(models.Model):
                 self.completed_at = timezone.now()
 
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.title} ({self.project.name})"

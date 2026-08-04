@@ -1,7 +1,9 @@
 import uuid
 from decimal import Decimal
-from django.db import models
+
 from django.conf import settings
+from django.db import models
+
 
 class Stage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -26,7 +28,9 @@ class Opportunity(models.Model):
     contact_id = models.UUIDField(null=True, blank=True)
     
     stage = models.ForeignKey(Stage, on_delete=models.PROTECT, related_name='opportunities')
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='opportunities')
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='opportunities'
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

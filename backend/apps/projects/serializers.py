@@ -1,6 +1,8 @@
 from rest_framework import serializers
+
 from apps.customers.serializers import CustomerSerializer
 from apps.identity.serializers import UserSerializer
+
 from .models import Project, Task
 
 

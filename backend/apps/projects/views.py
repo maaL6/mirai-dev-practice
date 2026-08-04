@@ -1,9 +1,10 @@
 from django.db.models import Q
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.customers.models import Customer
+
 from .models import Project, Task
 from .serializers import ProjectSerializer, TaskSerializer
 
@@ -45,8 +46,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # Verify customer access
                 if user.role == "member" and customer.owner != user:
                     self.permission_denied(self.request, message="Invalid customer selection.")
-            except Customer.DoesNotExist:
-                raise serializers.ValidationError({"customer": "Customer does not exist."})
+            except Customer.DoesNotExist as err:
+                raise serializers.ValidationError({"customer": "Customer does not exist."}) from err
 
         serializer.save(manager=user)
 
@@ -58,7 +59,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             self.permission_denied(self.request, message="Member cannot edit projects.")
 
         if user.role == "manager" and project.manager != user and user.role != "admin":
-            self.permission_denied(self.request, message="Manager cannot edit another manager's project.")
+            msg = "Manager cannot edit another manager's project."
+            self.permission_denied(self.request, message=msg)
 
         serializer.save()
 
@@ -110,7 +112,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if user.role == "member":
             if task.assignee != user:
-                self.permission_denied(self.request, message="You can only update your assigned tasks.")
+                msg = "You can only update your assigned tasks."
+                self.permission_denied(self.request, message=msg)
 
             # Member can ONLY update status
             new_status = serializer.validated_data.get("status", task.status)

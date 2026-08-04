@@ -1,6 +1,8 @@
-from rest_framework import viewsets, permissions
-from .models import Stage, Opportunity
-from .serializers import StageSerializer, OpportunitySerializer
+from rest_framework import permissions, viewsets
+
+from .models import Opportunity, Stage
+from .serializers import OpportunitySerializer, StageSerializer
+
 
 class StageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Stage.objects.all()
