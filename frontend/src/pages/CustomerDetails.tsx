@@ -4,8 +4,9 @@ import { ContactForm } from '../components/ContactForm';
 import { CustomerEditDialog } from '../components/CustomerEditDialog';
 import { useState } from 'react';
 
-export function CustomerDetails() {
-  const { id } = useParams<{ id: string }>();
+export function CustomerDetails({ id: propId }: { id?: string }) {
+  const params = useParams<{ id: string }>();
+  const id = propId || params.id;
   const queryClient = useQueryClient();
   const [deactivateError, setDeactivateError] = useState('');
 

@@ -1,0 +1,103 @@
+from django.db.models import Q
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from .models import Contact, Customer
+from .permissions import IsCustomerOwnerOrManagerOrAdmin
+from .serializers import ContactSerializer, CustomerSerializer
+
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomerSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsCustomerOwnerOrManagerOrAdmin,
+    ]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Customer.objects.none()
+
+        if user.role in ["admin", "manager"]:
+            qs = Customer.objects.all()
+        else:
+            qs = Customer.objects.filter(owner=user)
+
+        # Filters
+        search = self.request.query_params.get("search", "").strip()
+        kind = self.request.query_params.get("kind", "").strip()
+        active = self.request.query_params.get("is_active") or self.request.query_params.get("active")
+
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(email__icontains=search)
+                | Q(phone__icontains=search)
+                | Q(contacts__name__icontains=search)
+                | Q(contacts__email__icontains=search)
+                | Q(contacts__phone__icontains=search)
+            ).distinct()
+
+        if kind:
+            qs = qs.filter(kind=kind)
+
+        if active is not None and active != "":
+            is_active_bool = str(active).lower() in ["true", "1"]
+            qs = qs.filter(is_active=is_active_bool)
+
+        return qs.order_by("-created_at")
+
+    def perform_create(self, serializer):
+        # Force owner to be current user
+        serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        # Member cannot reassign owner
+        if self.request.user.role not in ["admin", "manager"]:
+            serializer.save(owner=self.request.user)
+        else:
+            serializer.save()
+
+    @action(detail=True, methods=["post"])
+    def deactivate(self, request, pk=None):
+        customer = self.get_object()
+        customer.is_active = False
+        customer.save()
+        serializer = self.get_serializer(customer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get", "post"])
+    def contacts(self, request, pk=None):
+        customer = self.get_object()
+        if request.method == "GET":
+            contacts = customer.contacts.all()
+            serializer = ContactSerializer(contacts, many=True)
+            return Response(serializer.data)
+
+        elif request.method == "POST":
+            serializer = ContactSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(customer=customer)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContactViewSet(viewsets.ModelViewSet):
+    serializer_class = ContactSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsCustomerOwnerOrManagerOrAdmin,
+    ]
+    http_method_names = ["get", "patch", "delete", "head", "options"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Contact.objects.none()
+
+        if user.role in ["admin", "manager"]:
+            return Contact.objects.all()
+
+        return Contact.objects.filter(customer__owner=user)

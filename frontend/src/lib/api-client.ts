@@ -117,3 +117,10 @@ export function apiDelete<T = void>(
 ): Promise<T> {
   return request<T>("DELETE", path, undefined, options);
 }
+
+export const apiClient = {
+  get: apiGet,
+  post: apiPost,
+  patch: apiPatch,
+  delete: apiDelete,
+};

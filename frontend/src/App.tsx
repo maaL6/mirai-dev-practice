@@ -13,6 +13,9 @@ import { getHealth } from "./lib/api";
 import { CustomerList } from "./pages/CustomerList";
 import { CustomerDetails } from "./pages/CustomerDetails";
 import { CrmList } from "./pages/CrmList";
+import { ProductListPage } from "./features/products/ProductListPage";
+import { ProjectListPage } from "./features/projects/ProjectListPage";
+import { ProjectDetailsPage } from "./features/projects/ProjectDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -49,8 +52,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Overview", symbol: "⌂", path: "/" },
   { label: "Contacts", symbol: "◎", path: "/contacts" },
   { label: "CRM", symbol: "◇", path: "/crm" },
-  { label: "Sales", symbol: "▤", path: "/sales", placeholder: true },
-  { label: "Projects", symbol: "▦", path: "/projects", placeholder: true },
+  { label: "Products", symbol: "📦", path: "/products" },
+  { label: "Projects", symbol: "▦", path: "/projects" },
   { label: "Reports", symbol: "↗", path: "/reports", placeholder: true },
   { label: "Users", symbol: "⚙", path: "/users", roles: ["admin"] },
 ];
@@ -248,6 +251,11 @@ function AppShell() {
       return <CustomerDetails id={id} />;
     }
 
+    if (route.startsWith("/projects/")) {
+      const id = route.replace("/projects/", "");
+      return <ProjectDetailsPage id={id} />;
+    }
+
     switch (route) {
       case "/":
         return <DashboardPage />;
@@ -261,10 +269,10 @@ function AppShell() {
         return <CustomerList />;
       case "/crm":
         return <CrmList />;
-      case "/sales":
-        return <PlaceholderPage name="Sales" />;
+      case "/products":
+        return <ProductListPage />;
       case "/projects":
-        return <PlaceholderPage name="Projects" />;
+        return <ProjectListPage />;
       case "/reports":
         return <PlaceholderPage name="Reports" />;
       default:
