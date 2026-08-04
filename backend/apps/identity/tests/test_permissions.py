@@ -74,7 +74,9 @@ class PermissionClassesTestCase(TestCase):
         )
         response = client.get("/api/users/")
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json(), list)
+        data = response.json()
+        results = data.get("results", data) if isinstance(data, dict) else data
+        self.assertIsInstance(results, list)
 
     def test_admin_can_create_user(self):
         client = APIClient()

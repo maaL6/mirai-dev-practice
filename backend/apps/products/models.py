@@ -23,7 +23,6 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if self.sku:
             self.sku = self.sku.upper().strip()
-        self.full_clean()
         super().save(*args, **kwargs)
 
     def clean(self):

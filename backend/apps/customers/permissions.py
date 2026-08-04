@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from apps.identity.models import User
+
 
 class IsCustomerOwnerOrManagerOrAdmin(permissions.BasePermission):
     """
@@ -10,7 +12,7 @@ class IsCustomerOwnerOrManagerOrAdmin(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        if request.user.role in ["admin", "manager"]:
+        if request.user.role in (User.Role.ADMIN, User.Role.MANAGER):
             return True
 
         # Member: must be the owner of the customer (or contact's customer owner)

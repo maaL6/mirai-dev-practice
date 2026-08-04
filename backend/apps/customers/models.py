@@ -22,7 +22,7 @@ class Customer(models.Model):
     phone = models.CharField(max_length=30, blank=True, default="")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="customers",
     )
     is_active = models.BooleanField(default=True)

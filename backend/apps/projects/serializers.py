@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.customers.serializers import CustomerSerializer
+from apps.customers.serializers import CustomerListSerializer
 from apps.identity.serializers import UserSerializer
 
 from .models import Project, Task
@@ -28,10 +28,20 @@ class TaskSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "project", "completed_at", "created_at", "updated_at"]
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    customer_detail = CustomerSerializer(source="customer", read_only=True)
+class MemberTaskSerializer(serializers.ModelSerializer):
+    """Restricted serializer — Members can only update status."""
+
+    class Meta:
+        model = Task
+        fields = ["id", "status", "completed_at", "created_at", "updated_at"]
+        read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
+
+
+class ProjectListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for list endpoints — no nested tasks."""
+
+    customer_detail = CustomerListSerializer(source="customer", read_only=True)
     manager_detail = UserSerializer(source="manager", read_only=True)
-    tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
@@ -46,7 +56,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             "start_date",
             "due_date",
             "description",
-            "tasks",
             "created_at",
             "updated_at",
         ]
@@ -61,3 +70,12 @@ class ProjectSerializer(serializers.ModelSerializer):
                 {"due_date": "Project due date cannot be before start date."}
             )
         return attrs
+
+
+class ProjectDetailSerializer(ProjectListSerializer):
+    """Detail serializer — includes nested tasks."""
+
+    tasks = TaskSerializer(many=True, read_only=True)
+
+    class Meta(ProjectListSerializer.Meta):
+        fields = ProjectListSerializer.Meta.fields + ["tasks"]

@@ -28,13 +28,9 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.identity",
     "apps.customers",
-    "apps.contacts",
     "apps.crm",
     "apps.products",
-    "apps.catalog",
-    "apps.sales",
     "apps.projects",
-    "apps.reporting",
 ]
 
 MIDDLEWARE = [
@@ -118,6 +114,8 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
 # ---------------------------------------------------------------------------

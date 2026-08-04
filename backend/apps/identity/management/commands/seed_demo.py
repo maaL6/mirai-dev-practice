@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 
+from apps.crm.models import Stage
 from apps.customers.models import Contact, Customer
 from apps.identity.models import User
 from apps.products.models import Product
@@ -58,6 +59,27 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        # ------------------------------------------------------------------
+        # CRM Stages
+        # ------------------------------------------------------------------
+        stages = [
+            ("New", 10),
+            ("Qualified", 20),
+            ("Proposal", 30),
+            ("Won", 40),
+            ("Lost", 50),
+        ]
+        for name, order in stages:
+            _, created = Stage.objects.get_or_create(
+                name=name,
+                defaults={"order": order, "is_active": True},
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"  Created Stage: {name}"))
+
+        # ------------------------------------------------------------------
+        # Users
+        # ------------------------------------------------------------------
         users = {}
         for data in DEMO_USERS:
             email = data["email"]

@@ -7,7 +7,7 @@ from django.db import models
 
 class Stage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -17,21 +17,36 @@ class Stage(models.Model):
     def __str__(self):
         return self.name
 
+
 class Opportunity(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    expected_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    
-    # TV2 is working on contacts app, so we use UUIDField temporarily to avoid migration conflicts.
-    # TODO: Change to ForeignKey('contacts.Customer', ...) and ForeignKey('contacts.Contact', ...)
-    customer_id = models.UUIDField()
-    contact_id = models.UUIDField(null=True, blank=True)
-    
-    stage = models.ForeignKey(Stage, on_delete=models.PROTECT, related_name='opportunities')
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='opportunities'
+    expected_revenue = models.DecimalField(
+        max_digits=12, decimal_places=2, default=Decimal('0.00'),
     )
-    
+
+    customer = models.ForeignKey(
+        "customers.Customer",
+        on_delete=models.PROTECT,
+        related_name="opportunities",
+    )
+    contact = models.ForeignKey(
+        "customers.Contact",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="opportunities",
+    )
+
+    stage = models.ForeignKey(
+        Stage, on_delete=models.PROTECT, related_name='opportunities',
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='opportunities',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

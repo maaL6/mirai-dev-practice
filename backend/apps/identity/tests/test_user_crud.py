@@ -70,7 +70,9 @@ class UserCRUDTestCase(TestCase):
     def test_list_users_returns_all(self):
         response = self.client.get("/api/users/")
         self.assertEqual(response.status_code, 200)
-        emails = [u["email"] for u in response.json()]
+        data = response.json()
+        results = data.get("results", data) if isinstance(data, dict) else data
+        emails = [u["email"] for u in results]
         self.assertIn("admin@example.test", emails)
         self.assertIn("member@example.test", emails)
 

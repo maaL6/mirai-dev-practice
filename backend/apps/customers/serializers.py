@@ -6,8 +6,6 @@ from .models import Contact, Customer
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    position = serializers.CharField(source="job_title", required=False, allow_blank=True)
-
     class Meta:
         model = Contact
         fields = [
@@ -15,7 +13,6 @@ class ContactSerializer(serializers.ModelSerializer):
             "customer",
             "name",
             "job_title",
-            "position",
             "email",
             "phone",
             "is_primary",
@@ -25,9 +22,10 @@ class ContactSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "customer", "created_at", "updated_at"]
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for list endpoints — no nested contacts."""
+
     owner_detail = UserSerializer(source="owner", read_only=True)
-    contacts = ContactSerializer(many=True, read_only=True)
 
     class Meta:
         model = Customer
@@ -40,7 +38,6 @@ class CustomerSerializer(serializers.ModelSerializer):
             "owner",
             "owner_detail",
             "is_active",
-            "contacts",
             "created_at",
             "updated_at",
         ]
@@ -50,3 +47,12 @@ class CustomerSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError("Customer name is required.")
         return value.strip()
+
+
+class CustomerDetailSerializer(CustomerListSerializer):
+    """Detail serializer — includes nested contacts."""
+
+    contacts = ContactSerializer(many=True, read_only=True)
+
+    class Meta(CustomerListSerializer.Meta):
+        fields = CustomerListSerializer.Meta.fields + ["contacts"]

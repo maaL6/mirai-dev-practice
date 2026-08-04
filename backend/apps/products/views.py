@@ -3,6 +3,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.identity.models import User
 from apps.identity.permissions import IsManagerOrAdmin
 
 from .models import Product
@@ -15,7 +16,7 @@ class IsManagerOrAdminOrReadOnly(permissions.BasePermission):
             return False
         if request.method in permissions.SAFE_METHODS:
             return True
-        return request.user.role in ["admin", "manager"]
+        return request.user.role in (User.Role.ADMIN, User.Role.MANAGER)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -37,7 +38,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
 
         if active is not None and active != "":
-            is_active_bool = str(active).lower() in ["true", "1"]
+            is_active_bool = str(active).lower() in ("true", "1")
             qs = qs.filter(is_active=is_active_bool)
 
         return qs.order_by("sku")
@@ -50,6 +51,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     def deactivate(self, request, pk=None):
         product = self.get_object()
         product.is_active = False
-        product.save()
+        product.save(update_fields=["is_active", "updated_at"])
         serializer = self.get_serializer(product)
         return Response(serializer.data, status=status.HTTP_200_OK)

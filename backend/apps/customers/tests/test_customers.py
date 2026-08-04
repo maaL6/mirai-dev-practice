@@ -62,6 +62,10 @@ class CustomerApiTests(TestCase):
 
         self.client = APIClient()
 
+    # ------------------------------------------------------------------
+    # Existing tests
+    # ------------------------------------------------------------------
+
     def test_member_create_customer_auto_assigns_owner(self):
         self.client.force_authenticate(user=self.member1)
         data = {
@@ -81,7 +85,6 @@ class CustomerApiTests(TestCase):
         self.client.force_authenticate(user=self.member1)
         res = self.client.get("/api/customers/")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # Should return list with customer1 only (not customer2)
         results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
         customer_ids = [c["id"] for c in results]
         self.assertIn(str(self.customer1.id), customer_ids)
@@ -122,3 +125,78 @@ class CustomerApiTests(TestCase):
         # Setting contact2 as primary must unset primary on contact1
         self.assertTrue(contact2.is_primary)
         self.assertFalse(self.contact1.is_primary)
+
+    # ------------------------------------------------------------------
+    # NEW: Test invalid email format is rejected
+    # ------------------------------------------------------------------
+
+    def test_create_customer_with_invalid_email_rejected(self):
+        self.client.force_authenticate(user=self.member1)
+        data = {
+            "name": "Bad Email Corp",
+            "kind": "company",
+            "email": "not-an-email",
+        }
+        res = self.client.post("/api/customers/", data, format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", res.data)
+
+    # ------------------------------------------------------------------
+    # NEW: Test Manager sees correct scope
+    # ------------------------------------------------------------------
+
+    def test_manager_sees_all_customers(self):
+        self.client.force_authenticate(user=self.manager)
+        res = self.client.get("/api/customers/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        results = res.data.get("results", res.data) if isinstance(res.data, dict) else res.data
+        self.assertEqual(len(results), 2)
+
+    # ------------------------------------------------------------------
+    # NEW: Deactivate keeps Contacts intact
+    # ------------------------------------------------------------------
+
+    def test_deactivate_preserves_contacts(self):
+        self.client.force_authenticate(user=self.member1)
+        self.client.post(f"/api/customers/{self.customer1.id}/deactivate/")
+        self.customer1.refresh_from_db()
+        self.assertFalse(self.customer1.is_active)
+        # Contacts must still exist
+        self.assertTrue(Contact.objects.filter(customer=self.customer1).exists())
+        self.assertEqual(Contact.objects.filter(customer=self.customer1).count(), 1)
+
+    # ------------------------------------------------------------------
+    # NEW: Member cannot reassign owner via PATCH
+    # ------------------------------------------------------------------
+
+    def test_member_patch_cannot_change_owner(self):
+        self.client.force_authenticate(user=self.member1)
+        res = self.client.patch(
+            f"/api/customers/{self.customer1.id}/",
+            {"owner": str(self.member2.id)},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.customer1.refresh_from_db()
+        # Owner must remain member1, not member2
+        self.assertEqual(self.customer1.owner, self.member1)
+
+    # ------------------------------------------------------------------
+    # NEW: Pagination works
+    # ------------------------------------------------------------------
+
+    def test_customer_list_is_paginated(self):
+        self.client.force_authenticate(user=self.admin)
+        res = self.client.get("/api/customers/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # With pagination enabled, response should have 'results' key
+        self.assertIn("results", res.data)
+        self.assertIn("count", res.data)
+
+    # ------------------------------------------------------------------
+    # NEW: Unauthenticated access denied
+    # ------------------------------------------------------------------
+
+    def test_unauthenticated_cannot_access_customers(self):
+        res = self.client.get("/api/customers/")
+        self.assertIn(res.status_code, [401, 403])

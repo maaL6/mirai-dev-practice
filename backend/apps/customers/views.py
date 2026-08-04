@@ -3,27 +3,39 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.identity.models import User
+
 from .models import Contact, Customer
 from .permissions import IsCustomerOwnerOrManagerOrAdmin
-from .serializers import ContactSerializer, CustomerSerializer
+from .serializers import ContactSerializer, CustomerDetailSerializer, CustomerListSerializer
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
-    serializer_class = CustomerSerializer
     permission_classes = [
         permissions.IsAuthenticated,
         IsCustomerOwnerOrManagerOrAdmin,
     ]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return CustomerDetailSerializer
+        return CustomerListSerializer
 
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
             return Customer.objects.none()
 
-        if user.role in ["admin", "manager"]:
+        if user.role in (User.Role.ADMIN, User.Role.MANAGER):
             qs = Customer.objects.all()
         else:
             qs = Customer.objects.filter(owner=user)
+
+        qs = qs.select_related("owner")
+
+        # Prefetch contacts only for detail view
+        if self.action == "retrieve":
+            qs = qs.prefetch_related("contacts")
 
         # Filters
         search = self.request.query_params.get("search", "").strip()
@@ -45,7 +57,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
             qs = qs.filter(kind=kind)
 
         if active is not None and active != "":
-            is_active_bool = str(active).lower() in ["true", "1"]
+            is_active_bool = str(active).lower() in ("true", "1")
             qs = qs.filter(is_active=is_active_bool)
 
         return qs.order_by("-created_at")
@@ -55,17 +67,24 @@ class CustomerViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
-        # Member cannot reassign owner
-        if self.request.user.role not in ["admin", "manager"]:
-            serializer.save(owner=self.request.user)
+        user = self.request.user
+        # Only Admin/Manager can change owner
+        if user.role not in (User.Role.ADMIN, User.Role.MANAGER):
+            serializer.save(owner=user)
         else:
+            # Validate that owner exists if provided
+            owner_id = self.request.data.get("owner")
+            if owner_id:
+                if not User.objects.filter(pk=owner_id).exists():
+                    from rest_framework.exceptions import ValidationError
+                    raise ValidationError({"owner": "Specified owner does not exist."})
             serializer.save()
 
     @action(detail=True, methods=["post"])
     def deactivate(self, request, pk=None):
         customer = self.get_object()
         customer.is_active = False
-        customer.save()
+        customer.save(update_fields=["is_active", "updated_at"])
         serializer = self.get_serializer(customer)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -98,7 +117,9 @@ class ContactViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return Contact.objects.none()
 
-        if user.role in ["admin", "manager"]:
-            return Contact.objects.all()
+        if user.role in (User.Role.ADMIN, User.Role.MANAGER):
+            return Contact.objects.select_related("customer__owner").all()
 
-        return Contact.objects.filter(customer__owner=user)
+        return Contact.objects.select_related("customer__owner").filter(
+            customer__owner=user,
+        )
